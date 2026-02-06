@@ -1,4 +1,5 @@
 import asyncio
+import os 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message, BufferedInputFile
@@ -8,6 +9,7 @@ from config import BOT_TOKEN
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 import logging
+from aiohttp import web 
 from utils import get_temperature, calc_water, calc_calories, water_plot, get_food_info, WORKOUT_CALORIES, calories_plot, simple_recommend
 
 logging.basicConfig(level=logging.INFO)
@@ -499,9 +501,21 @@ async def recommend(message: Message):
         response += "Вы в норме!"
     await message.answer(response)
 
+# Фиктивный веб-сервер для Render
+async def hello(request):
+    return web.Response(text="Bot is alive!")
+
+app = web.Application()
+app.add_routes([web.get("/", hello)])
+
+# порт берем из переменной Render
+port = int(os.environ.get("PORT", 10000))
+
 async def main():
-    print("Bot started")
-    await dp.start_polling(bot)
+    # запускаем бот и веб-сервер параллельно
+    await asyncio.gather(
+        dp.start_polling(bot),
+        web._run_app(app, host="0.0.0.0", port=port))
 
 if __name__ == "__main__":
     asyncio.run(main())
