@@ -11,15 +11,16 @@ import logging
 from utils import get_temperature, calc_water, calc_calories, water_plot, get_food_info, WORKOUT_CALORIES, calories_plot, simple_recommend
 
 logging.basicConfig(level=logging.INFO)
-class LoggingMiddleware(BaseMiddleware):
-    async def __call__(self, handler, event: TelegramObject, data: dict):
-        if hasattr(event, "text"):
-            logging.info(f"USER {event.from_user.id}: {event.text}")
-        return await handler(event, data)
-dp.message.middleware(LoggingMiddleware())
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+class LoggingMiddleware(BaseMiddleware):
+    async def __call__(self, handler, event: TelegramObject, data: dict):
+        if hasattr(event, "text") and event.text:
+            logging.info(f"USER {event.from_user.id}: {event.text}")
+        return await handler(event, data)
+dp.message.middleware(LoggingMiddleware())
 
 users = {}
 
